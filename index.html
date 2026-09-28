@@ -12,7 +12,7 @@
   <style>
     :root {
       --bg-main: #090d16;
-      --card-bg: rgba(18, 26, 43, 0.8);
+      --card-bg: rgba(18, 26, 43, 0.85);
       --card-border: rgba(56, 189, 248, 0.2);
       --accent-primary: #00d2ff;
       --accent-secondary: #ff2a5f;
@@ -31,6 +31,7 @@
       min-height: 100vh;
       display: flex;
       flex-direction: column;
+      position: relative;
     }
 
     header {
@@ -83,7 +84,7 @@
     .canvas-container {
       position: relative;
       width: 100%;
-      height: 400px;
+      height: 380px;
       background: radial-gradient(circle at center, rgba(18, 28, 48, 0.8), rgba(8, 12, 22, 0.95));
       border-radius: 1rem;
       overflow: hidden;
@@ -138,6 +139,12 @@
       box-shadow: 0 4px 15px rgba(117, 121, 255, 0.3);
     }
 
+    .btn-calc {
+      background: linear-gradient(135deg, #10b981, #059669);
+      border: none;
+      box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+    }
+
     .stat-card {
       background: rgba(10, 16, 28, 0.6);
       border-radius: 0.75rem;
@@ -157,7 +164,7 @@
     }
 
     .chart-box {
-      height: 230px;
+      height: 220px;
       width: 100%;
     }
 
@@ -184,6 +191,79 @@
       border-color: var(--accent-primary);
       box-shadow: 0 0 10px rgba(0, 210, 255, 0.3);
     }
+
+    /* เครื่องคิดเลข Floating Window */
+    .calc-window {
+      position: absolute;
+      top: 90px;
+      right: 30px;
+      width: 320px;
+      background: rgba(15, 23, 42, 0.95);
+      backdrop-filter: blur(25px);
+      border: 1px solid rgba(56, 189, 248, 0.4);
+      border-radius: 1rem;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+      z-index: 999;
+      display: none;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .calc-header {
+      background: rgba(30, 41, 59, 0.9);
+      padding: 0.75rem 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: move;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      user-select: none;
+    }
+
+    .calc-display {
+      background: #020617;
+      padding: 1rem;
+      text-align: right;
+      font-size: 1.6rem;
+      color: #38bdf8;
+      font-family: monospace;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      min-height: 60px;
+      word-break: break-all;
+    }
+
+    .calc-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.5rem;
+      padding: 1rem;
+    }
+
+    .calc-btn {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: white;
+      padding: 0.75rem;
+      font-size: 1rem;
+      border-radius: 0.5rem;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .calc-btn:hover {
+      background: rgba(255, 255, 255, 0.15);
+    }
+
+    .calc-btn-op {
+      background: rgba(56, 189, 248, 0.2);
+      color: #38bdf8;
+    }
+
+    .calc-btn-eq {
+      background: linear-gradient(135deg, #00c6ff, #0072ff);
+      color: white;
+      grid-column: span 2;
+    }
   </style>
 </head>
 <body>
@@ -193,7 +273,10 @@
       <h1 style="font-size: 1.25rem; font-weight: 600; letter-spacing: 0.5px;">🧪 Chemical Titration Simulator <span style="font-size: 0.75rem; color: #00d2ff; font-weight: 400;">HD Lab</span></h1>
       <p style="font-size: 0.8rem; color: var(--text-muted);">ระบบจำลองการไทเทรตกรด-เบส และคำนวณจุดยุติ | เคมี ม.5</p>
     </div>
-    <span class="badge">เกรด 4 Target</span>
+    <div style="display: flex; gap: 0.75rem; align-items: center;">
+      <button class="btn btn-calc" onclick="toggleCalc()" style="padding: 0.4rem 0.9rem; font-size: 0.85rem;">🧮 เครื่องคิดเลข</button>
+      <span class="badge">เกรด 4 Target</span>
+    </div>
   </header>
 
   <div class="main-layout">
@@ -255,6 +338,40 @@
     </div>
   </div>
 
+  <!-- เครื่องคิดเลข Floating Window -->
+  <div class="calc-window" id="calcWindow">
+    <div class="calc-header" id="calcHeader">
+      <span style="font-size: 0.85rem; font-weight: 600;">🧮 เครื่องคิดเลขวิทยาศาสตร์</span>
+      <span style="cursor: pointer; font-size: 1.1rem;" onclick="toggleCalc()">✖</span>
+    </div>
+    <div class="calc-display" id="calcDisplay">0</div>
+    <div class="calc-grid">
+      <button class="calc-btn calc-btn-op" onclick="calcClear()">C</button>
+      <button class="calc-btn calc-btn-op" onclick="calcOp('(')">(</button>
+      <button class="calc-btn calc-btn-op" onclick="calcOp(')')">)</button>
+      <button class="calc-btn calc-btn-op" onclick="calcOp('/')">÷</button>
+      
+      <button class="calc-btn" onclick="calcNum('7')">7</button>
+      <button class="calc-btn" onclick="calcNum('8')">8</button>
+      <button class="calc-btn" onclick="calcNum('9')">9</button>
+      <button class="calc-btn calc-btn-op" onclick="calcOp('*')">×</button>
+      
+      <button class="calc-btn" onclick="calcNum('4')">4</button>
+      <button class="calc-btn" onclick="calcNum('5')">5</button>
+      <button class="calc-btn" onclick="calcNum('6')">6</button>
+      <button class="calc-btn calc-btn-op" onclick="calcOp('-')">-</button>
+      
+      <button class="calc-btn" onclick="calcNum('1')">1</button>
+      <button class="calc-btn" onclick="calcNum('2')">2</button>
+      <button class="calc-btn" onclick="calcNum('3')">3</button>
+      <button class="calc-btn calc-btn-op" onclick="calcOp('+')">+</button>
+      
+      <button class="calc-btn" onclick="calcNum('0')">0</button>
+      <button class="calc-btn" onclick="calcNum('.')">.</button>
+      <button class="calc-btn calc-btn-eq" onclick="calcEval()">=</button>
+    </div>
+  </div>
+
   <script>
     // ตัวแปรเคมี
     let V1 = 25.0; 
@@ -264,7 +381,6 @@
     let currentV2 = 0;
     let autoInterval = null;
 
-    // ระบบจัดการประเภทคำถาม
     let targetVariable = 'M1'; // M1, M2, V1, V2
     let correctAnswer = 0;
 
@@ -281,7 +397,6 @@
     window.addEventListener('resize', resizeCanvas);
     resizeCanvas();
 
-    // ฟังก์ชันสุ่มโจทย์และสุ่มตัวแปรเป้าหมาย
     function initProblem() {
       const v1Options = [10.0, 15.0, 20.0, 25.0, 30.0, 50.0];
       const m2Options = [0.05, 0.10, 0.15, 0.20];
@@ -295,7 +410,6 @@
       drops = [];
       bubbles = [];
 
-      // สุ่มตัวแปรที่ต้องการให้ผู้เรียนหา
       const varTypes = ['M1', 'M2', 'V1', 'V2'];
       targetVariable = varTypes[Math.floor(Math.random() * varTypes.length)];
 
@@ -399,12 +513,12 @@
       standGrad.addColorStop(1, '#1e293b');
       
       ctx.fillStyle = standGrad;
-      ctx.fillRect(cx - 70, 350, 140, 12);
-      ctx.fillRect(cx + 45, 30, 8, 320);
+      ctx.fillRect(cx - 70, 340, 140, 12);
+      ctx.fillRect(cx + 45, 20, 8, 320);
 
       // แคลมป์จับ
       ctx.fillStyle = '#64748b';
-      ctx.fillRect(cx + 10, 110, 37, 8);
+      ctx.fillRect(cx + 10, 100, 37, 8);
 
       // บิวเรตต์
       let buretteGrad = ctx.createLinearGradient(cx - 12, 0, cx + 12, 0);
@@ -415,20 +529,20 @@
       ctx.fillStyle = buretteGrad;
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
       ctx.lineWidth = 1.5;
-      ctx.fillRect(cx - 10, 20, 20, 170);
-      ctx.strokeRect(cx - 10, 20, 20, 170);
+      ctx.fillRect(cx - 10, 15, 20, 160);
+      ctx.strokeRect(cx - 10, 15, 20, 160);
 
       // สารละลายในบิวเรตต์
-      const baseHeight = Math.max(0, 150 - (currentV2 / 50) * 150);
+      const baseHeight = Math.max(0, 140 - (currentV2 / 50) * 140);
       let liquidGrad = ctx.createLinearGradient(cx - 8, 0, cx + 8, 0);
       liquidGrad.addColorStop(0, 'rgba(0, 210, 255, 0.7)');
       liquidGrad.addColorStop(1, 'rgba(0, 114, 255, 0.5)');
       ctx.fillStyle = liquidGrad;
-      ctx.fillRect(cx - 8, 20 + (150 - baseHeight), 16, baseHeight);
+      ctx.fillRect(cx - 8, 15 + (140 - baseHeight), 16, baseHeight);
 
       // หัวก๊อกบิวเรตต์
       ctx.fillStyle = '#f43f5e';
-      ctx.fillRect(cx - 14, 190, 28, 6);
+      ctx.fillRect(cx - 14, 175, 28, 6);
 
       // หยดสาร
       for (let i = drops.length - 1; i >= 0; i--) {
@@ -442,10 +556,10 @@
         ctx.shadowBlur = 0;
         d.y += 6;
 
-        if (d.y >= 285) {
+        if (d.y >= 275) {
           drops.splice(i, 1);
           if (bubbles.length < 15) {
-            bubbles.push({ x: cx + (Math.random() * 30 - 15), y: 320, r: Math.random() * 3 + 1, alpha: 1 });
+            bubbles.push({ x: cx + (Math.random() * 30 - 15), y: 310, r: Math.random() * 3 + 1, alpha: 1 });
           }
         }
       }
@@ -454,18 +568,18 @@
       const ph = calculatepH(currentV2);
       const colorObj = getColorForpH(ph);
       const totalVolume = V1 + currentV2;
-      const liquidTopY = Math.max(260, 315 - (totalVolume / 80) * 60);
+      const liquidTopY = Math.max(250, 305 - (totalVolume / 80) * 60);
 
       ctx.save();
       ctx.beginPath();
       
-      const widthRatioAtTop = (330 - liquidTopY) / 100;
+      const widthRatioAtTop = (320 - liquidTopY) / 100;
       const liquidHalfWidth = 12 + widthRatioAtTop * 43;
 
       ctx.moveTo(cx - liquidHalfWidth, liquidTopY);
       ctx.lineTo(cx + liquidHalfWidth, liquidTopY);
-      ctx.lineTo(cx + 55, 330);
-      ctx.quadraticCurveTo(cx, 340, cx - 55, 330);
+      ctx.lineTo(cx + 55, 320);
+      ctx.quadraticCurveTo(cx, 330, cx - 55, 320);
       ctx.closePath();
 
       ctx.fillStyle = colorObj.fill;
@@ -482,10 +596,10 @@
 
       // โครงขวดแก้ว
       ctx.beginPath();
-      ctx.moveTo(cx - 12, 230);
-      ctx.lineTo(cx + 12, 230);
-      ctx.lineTo(cx + 55, 330);
-      ctx.quadraticCurveTo(cx, 340, cx - 55, 330);
+      ctx.moveTo(cx - 12, 220);
+      ctx.lineTo(cx + 12, 220);
+      ctx.lineTo(cx + 55, 320);
+      ctx.quadraticCurveTo(cx, 330, cx - 55, 320);
       ctx.closePath();
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.75)';
       ctx.lineWidth = 2;
@@ -537,7 +651,7 @@
 
     function addBase(amount) {
       currentV2 += amount;
-      drops.push({ y: 196 });
+      drops.push({ y: 181 });
 
       const ph = calculatepH(currentV2);
       
@@ -596,7 +710,6 @@
         return;
       }
 
-      // ยอมรับความคลาดเคลื่อนได้เล็กน้อย (0.01 หรือ 0.5 ตามประเภทตัวแปร)
       const tolerance = (targetVariable === 'V1' || targetVariable === 'V2') ? 0.3 : 0.005;
       const unitStr = (targetVariable === 'V1' || targetVariable === 'V2') ? 'mL' : 'M';
 
@@ -610,6 +723,71 @@
         resBox.style.color = '#fca5a5';
         resBox.innerText = `❌ ยังไม่ถูกต้อง (คำตอบที่ถูกต้องคือประมาณ ${correctAnswer.toFixed(3)} ${unitStr}) ลองคำนวณใหม่อีกครั้งครับ`;
       }
+    }
+
+    // ฟังก์ชันเครื่องคิดเลข
+    let calcExpr = '';
+    
+    function toggleCalc() {
+      const win = document.getElementById('calcWindow');
+      win.style.display = (win.style.display === 'flex') ? 'none' : 'flex';
+    }
+
+    function calcNum(val) {
+      if (calcExpr === '0') calcExpr = '';
+      calcExpr += val;
+      document.getElementById('calcDisplay').innerText = calcExpr;
+    }
+
+    function calcOp(op) {
+      calcExpr += op;
+      document.getElementById('calcDisplay').innerText = calcExpr;
+    }
+
+    function calcClear() {
+      calcExpr = '';
+      document.getElementById('calcDisplay').innerText = '0';
+    }
+
+    function calcEval() {
+      try {
+        let res = eval(calcExpr);
+        document.getElementById('calcDisplay').innerText = res;
+        calcExpr = res.toString();
+      } catch (e) {
+        document.getElementById('calcDisplay').innerText = 'Error';
+        calcExpr = '';
+      }
+    }
+
+    // ลากย้ายหน้าต่างเครื่องคิดเลข (Drag Feature)
+    const dragWin = document.getElementById("calcWindow");
+    const dragHeader = document.getElementById("calcHeader");
+    let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+
+    dragHeader.onmousedown = dragMouseDown;
+
+    function dragMouseDown(e) {
+      e.preventDefault();
+      pos3 = e.clientX;
+      pos4 = e.clientY;
+      document.onmouseup = closeDragElement;
+      document.onmousemove = elementDrag;
+    }
+
+    function elementDrag(e) {
+      e.preventDefault();
+      pos1 = pos3 - e.clientX;
+      pos2 = pos4 - e.clientY;
+      pos3 = e.clientX;
+      pos4 = e.clientY;
+      dragWin.style.top = (dragWin.offsetTop - pos2) + "px";
+      dragWin.style.left = (dragWin.offsetLeft - pos1) + "px";
+    }
+
+    function closeDragElement() {
+      document.onmouseup = null;
+      document.onmousemove = null;
     }
 
     // เริ่มต้นทำงาน
