@@ -1,109 +1,428 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chemical Titration Simulator - ม.5</title>
-    <style>
-        body { font-family: 'Kanit', sans-serif; background-color: #f0f4f8; text-align: center; padding: 20px; }
-        .game-container { max-width: 600px; margin: 0 auto; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        .flask-box { width: 120px; height: 160px; margin: 20px auto; border: 4px solid #333; border-top: none; border-radius: 0 0 30px 30px; position: relative; background: #e0e0e0; display: flex; align-items: flex-end; justify-content: center; overflow: hidden; }
-        .liquid { width: 100%; transition: background-color 0.3s, height 0.2s; }
-        button { background-color: #28a745; color: white; border: none; padding: 10px 20px; font-size: 16px; border-radius: 8px; cursor: pointer; margin: 5px; }
-        button:hover { background-color: #218838; }
-        .stat-box { background: #eef2f5; padding: 10px; border-radius: 8px; margin-top: 15px; font-size: 18px; }
-        input[type="number"] { padding: 8px; width: 100px; font-size: 16px; border: 1px solid #ccc; border-radius: 5px; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chemical Titration Simulator - ม.5</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <style>
+    :root {
+      --bg-main: #0f172a;
+      --card-bg: rgba(30, 41, 59, 0.7);
+      --card-border: rgba(255, 255, 255, 0.1);
+      --accent-primary: #38bdf8;
+      --accent-secondary: #f43f5e;
+      --text-light: #f8fafc;
+      --text-muted: #94a3b8;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Prompt', sans-serif; }
+
+    body {
+      background: #0b0f19;
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(56, 189, 248, 0.12) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(244, 63, 94, 0.12) 0px, transparent 50%);
+      color: var(--text-light);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      padding: 1.25rem 2rem;
+      background: rgba(15, 23, 42, 0.8);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--card-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .badge {
+      background: linear-gradient(135deg, #0284c7, #2563eb);
+      padding: 0.35rem 0.8rem;
+      border-radius: 9999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+
+    .main-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      padding: 1.5rem;
+      max-width: 1400px;
+      margin: 0 auto;
+      width: 100%;
+      flex: 1;
+    }
+
+    @media (max-width: 968px) {
+      .main-layout { grid-template-columns: 1fr; }
+    }
+
+    .panel {
+      background: var(--card-bg);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--card-border);
+      border-radius: 1.25rem;
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+      box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+    }
+
+    .canvas-container {
+      position: relative;
+      width: 100%;
+      height: 380px;
+      background: rgba(15, 23, 42, 0.6);
+      border-radius: 0.75rem;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    canvas#labCanvas { width: 100%; height: 100%; }
+
+    .control-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.75rem;
+    }
+
+    .btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--card-border);
+      color: var(--text-light);
+      padding: 0.75rem 1rem;
+      border-radius: 0.75rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    .btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      transform: translateY(-2px);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #0ea5e9, #0284c7);
+      border: none;
+    }
+
+    .btn-secondary {
+      background: linear-gradient(135deg, #e11d48, #be123c);
+      border: none;
+    }
+
+    .stat-card {
+      background: rgba(15, 23, 42, 0.5);
+      border-radius: 0.75rem;
+      padding: 1rem;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .ph-meter {
+      font-size: 1.75rem;
+      font-weight: 700;
+      text-align: center;
+      margin-top: 0.25rem;
+      background: linear-gradient(135deg, #38bdf8, #818cf8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .chart-box {
+      height: 220px;
+      width: 100%;
+    }
+
+    .quiz-section {
+      background: rgba(15, 23, 42, 0.6);
+      border-radius: 1rem;
+      padding: 1.25rem;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    input[type="number"] {
+      width: 100%;
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid var(--card-border);
+      padding: 0.75rem 1rem;
+      border-radius: 0.75rem;
+      color: white;
+      font-size: 1rem;
+      outline: none;
+      margin-top: 0.5rem;
+    }
+
+    input[type="number"]:focus {
+      border-color: var(--accent-primary);
+    }
+  </style>
 </head>
 <body>
 
-<div class="game-container">
-    <h2>🧪 เกมจำลองการไทเทรต (Titration Lab)</h2>
-    <p><b>โจทย์:</b> หาความเข้มข้นของกรด HCl ($M_1$) โดยหยดสารละลาย NaOH $0.1\text{ M}$ ($M_2$)</p>
-    
-    <div class="flask-box">
-        <div id="liquid" class="liquid" style="height: 40%; background-color: #f8f9fa;"></div>
-    </div>
-
+  <header>
     <div>
-        <p>ปริมาตร NaOH ที่หยดลงไป ($V_2$): <span id="v2-display">0.0</span> mL</p>
-        <button onclick="addBase(0.5)">💧 หยด NaOH (+0.5 mL)</button>
-        <button onclick="addBase(2.0)">🌊 เท NaOH (+2.0 mL)</button>
+      <h1 style="font-size: 1.25rem; font-weight: 600;">🧪 Chemical Titration Simulator</h1>
+      <p style="font-size: 0.8rem; color: var(--text-muted);">ระบบจำลองการไทเทรตกรด-เบส และคำนวณจุดยุติ | เคมี ม.5</p>
+    </div>
+    <span class="badge">เกรด 4 Target</span>
+  </header>
+
+  <div class="main-layout">
+    <!-- ซีกซ้าย: ห้องแล็บจำลอง -->
+    <div class="panel">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h2 style="font-size: 1.1rem; font-weight: 600;">🥼 ห้องปฏิบัติต่างๆ (Lab Workbench)</h2>
+        <button class="btn" onclick="resetLab()" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">🔄 รีเซ็ตการทดลอง</button>
+      </div>
+
+      <div class="canvas-container">
+        <canvas id="labCanvas"></canvas>
+      </div>
+
+      <div class="control-grid">
+        <button class="btn btn-primary" onclick="addBase(0.1)">💧 หยดทีละนิด (+0.1 mL)</button>
+        <button class="btn btn-primary" onclick="addBase(1.0)">🌊 ปล่อยสายสาร (+1.0 mL)</button>
+        <button class="btn" onclick="toggleAutoDrop()" id="autoBtn">▶️ เปิดหยดอัตโนมัติ</button>
+        <button class="btn btn-secondary" onclick="addBase(5.0)">⚡ เร่งสปีด (+5.0 mL)</button>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+        <div class="stat-card">
+          <div style="font-size: 0.85rem; color: var(--text-muted);">ปริมาตร NaOH ($V_2$)</div>
+          <div style="font-size: 1.5rem; font-weight: 600; text-align: center; margin-top: 0.25rem;" id="volDisplay">0.00 mL</div>
+        </div>
+        <div class="stat-card">
+          <div style="font-size: 0.85rem; color: var(--text-muted);">ค่า pH ปัจจุบัน</div>
+          <div class="ph-meter" id="phDisplay">1.00</div>
+        </div>
+      </div>
     </div>
 
-    <div class="stat-box">
-        <p>สถานะสารละลาย: <b id="status-text">ใสไม่มีสี (กรด)</b></p>
+    <!-- ซีกขวา: กราฟ + ระบบตอบคำถาม -->
+    <div class="panel">
+      <h2 style="font-size: 1.1rem; font-weight: 600;">📊 กราฟการไทเทรต & วิเคราะห์ผล</h2>
+      
+      <div class="chart-box">
+        <canvas id="titrationChart"></canvas>
+      </div>
+
+      <div class="quiz-section">
+        <h3 style="font-size: 1rem; margin-bottom: 0.5rem; color: var(--accent-primary);">📝 คำนวณหาความเข้มข้นของกรด HCl ($M_1$)</h3>
+        <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.5;">
+          <b>ข้อมูลชุดทดลอง:</b><br>
+          • ใช้กรด HCl ($V_1$) ปริมาตร <b>25.00 mL</b><br>
+          • ไทเทรตด้วย NaOH ความเข้มข้น ($M_2$) <b>0.10 M</b><br>
+          • สังเกตการเปลี่ยนสีของ <b>ฟีนอล์ฟทาลีน</b> (สีชมพูอ่อนระเรื่อ) เพื่อหาจุดยุติ ($V_2$)
+        </p>
+
+        <div style="margin-top: 1rem;">
+          <label style="font-size: 0.85rem;">กรอกค่าความเข้มข้น $M_1$ ที่คำนวณได้ (M):</label>
+          <input type="number" id="userAns" placeholder="เช่น 0.08" step="0.001">
+          <button class="btn btn-primary" onclick="checkAnswer()" style="width: 100%; margin-top: 0.75rem;">ส่งคำตอบประเมินผล</button>
+        </div>
+
+        <div id="resultBox" style="margin-top: 1rem; display: none; padding: 0.75rem; border-radius: 0.5rem; font-size: 0.9rem;"></div>
+      </div>
     </div>
+  </div>
 
-    <hr style="margin: 20px 0;">
-
-    <div>
-        <h3>คำนวณหาความเข้มข้นของ HCl ($M_1$)</h3>
-        <p>ใช้สูตร: $M_1 \times V_1 = M_2 \times V_2$ (กำหนดให้ $V_1 = 25\text{ mL}$)</p>
-        <input type="number" id="user-answer" step="0.01" placeholder="เช่น 0.08"> M
-        <button onclick="checkAnswer()">ส่งคำตอบ</button>
-    </div>
-
-    <p id="result-message" style="font-weight: bold; margin-top: 15px;"></p>
-</div>
-
-<script>
-    // กำหนดค่าสุ่มสเปกโจทย์
-    const M2 = 0.1; // NaOH 0.1 M
-    const V1 = 25;  // HCl 25 mL
-    // สุ่มความเข้มข้นกรดจริง 0.05 - 0.15 M
-    const targetM1 = (Math.floor(Math.random() * 10) + 5) / 100; 
-    // คำนวณจุดยุติจริง (V2 ที่ทำให้สะเทินพอดี)
-    const exactV2 = (targetM1 * V1) / M2;
-
+  <script>
+    // สเปกโจทย์สุ่ม
+    const V1 = 25.0; // mL
+    const M2 = 0.10; // M
+    let targetM1 = 0.08;
+    let exactV2 = 20.0;
     let currentV2 = 0;
-    let isFinished = false;
+    let autoInterval = null;
+
+    // Canvas Logic
+    const canvas = document.getElementById('labCanvas');
+    const ctx = canvas.getContext('2d');
+
+    function resizeCanvas() {
+      canvas.width = canvas.parentElement.clientWidth;
+      canvas.height = canvas.parentElement.clientHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    function initProblem() {
+      targetM1 = (Math.floor(Math.random() * 8) + 5) / 100; // 0.05 - 0.12 M
+      exactV2 = (targetM1 * V1) / M2;
+      currentV2 = 0;
+      chartData.labels = [0];
+      chartData.datasets[0].data = [calculatepH(0)];
+      if (titrationChart) titrationChart.update();
+    }
+
+    function calculatepH(v2) {
+      const molesAcid = (V1 / 1000) * targetM1;
+      const molesBase = (v2 / 1000) * M2;
+      const totalVol = (V1 + v2) / 1000;
+
+      if (molesBase < molesAcid) {
+        const remAcid = molesAcid - molesBase;
+        const hConc = remAcid / totalVol;
+        return Math.max(1.0, -Math.log10(hConc));
+      } else if (Math.abs(molesBase - molesAcid) < 1e-7) {
+        return 7.0;
+      } else {
+        const remBase = molesBase - molesAcid;
+        const ohConc = remBase / totalVol;
+        const pOH = -Math.log10(ohConc);
+        return Math.min(13.5, 14 - pOH);
+      }
+    }
+
+    function getColorForpH(ph) {
+      if (ph < 8.2) return 'rgba(248, 249, 250, 0.2)'; // ใส
+      if (ph >= 8.2 && ph <= 10.0) {
+        const alpha = (ph - 8.2) / 1.8;
+        return `rgba(244, 63, 94, ${0.2 + alpha * 0.6})`; // ชมพูอ่อน
+      }
+      return 'rgba(225, 29, 72, 0.85)'; // ชมพูเข้ม/บานเย็น
+    }
+
+    function drawLab() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const cx = canvas.width / 2;
+
+      // บิวเรตต์ (Burette)
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+      ctx.lineWidth = 3;
+      ctx.strokeRect(cx - 12, 20, 24, 180);
+
+      // ของเหลวในบิวเรตต์
+      const baseHeight = Math.max(0, 160 - (currentV2 / 40) * 160);
+      ctx.fillStyle = 'rgba(56, 189, 248, 0.4)';
+      ctx.fillRect(cx - 10, 20 + (160 - baseHeight), 20, baseHeight);
+
+      // ขาตั้ง
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+      ctx.fillRect(cx - 60, 320, 120, 10);
+      ctx.fillRect(cx + 40, 40, 8, 280);
+
+      // ขวดรูปชมพู่ (Flask)
+      const ph = calculatepH(currentV2);
+      ctx.beginPath();
+      ctx.moveTo(cx - 15, 230);
+      ctx.lineTo(cx + 15, 230);
+      ctx.lineTo(cx + 50, 310);
+      ctx.lineTo(cx - 50, 310);
+      ctx.closePath();
+      ctx.fillStyle = getColorForpH(ph);
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+      ctx.stroke();
+
+      requestAnimationFrame(drawLab);
+    }
+
+    // Chart.js Configuration
+    const chartCtx = document.getElementById('titrationChart').getContext('2d');
+    const chartData = {
+      labels: [0],
+      datasets: [{
+        label: 'pH Curve',
+        data: [1.0],
+        borderColor: '#38bdf8',
+        borderWidth: 2,
+        tension: 0.3,
+        pointRadius: 0
+      }]
+    };
+
+    const titrationChart = new Chart(chartCtx, {
+      type: 'line',
+      data: chartData,
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: { title: { display: true, text: 'NaOH (mL)', color: '#94a3b8' }, ticks: { color: '#94a3b8' } },
+          y: { title: { display: true, text: 'pH', color: '#94a3b8' }, min: 0, max: 14, ticks: { color: '#94a3b8' } }
+        },
+        plugins: { legend: { display: false } }
+      }
+    });
 
     function addBase(amount) {
-        if (isFinished) return;
-        currentV2 += amount;
-        document.getElementById('v2-display').innerText = currentV2.toFixed(1);
-        
-        let liquidDiv = document.getElementById('liquid');
-        let statusText = document.getElementById('status-text');
+      currentV2 += amount;
+      const ph = calculatepH(currentV2);
+      
+      document.getElementById('volDisplay').innerText = currentV2.toFixed(2) + ' mL';
+      document.getElementById('phDisplay').innerText = ph.toFixed(2);
 
-        // คำนวณการเปลี่ยนสีของฟีนอล์ฟทาลีน (จุดยุติ)
-        if (currentV2 < exactV2 - 0.5) {
-            liquidDiv.style.backgroundColor = "#f8f9fa"; // ใสไม่มีสี
-            statusText.innerText = "ใสไม่มีสี (ยังมีกรดเหลืออยู่)";
-            statusText.style.color = "black";
-        } else if (Math.abs(currentV2 - exactV2) <= 0.8) {
-            liquidDiv.style.backgroundColor = "#ffc0cb"; // ชมพูอ่อน (จุดยุติ)
-            statusText.innerText = "ชมพูอ่อนระเรื่อ (ถึงจุดยุติแล้ว!)";
-            statusText.style.color = "#d63384";
-        } else {
-            liquidDiv.style.backgroundColor = "#e0245e"; // ชมพูเข้ม/บานเย็น (เบสเกิน)
-            statusText.innerText = "สีชมพูเข้ม (เบสเกิน)";
-            statusText.style.color = "red";
-        }
+      chartData.labels.push(currentV2.toFixed(1));
+      chartData.datasets[0].data.push(ph);
+      titrationChart.update();
+    }
+
+    function toggleAutoDrop() {
+      const btn = document.getElementById('autoBtn');
+      if (autoInterval) {
+        clearInterval(autoInterval);
+        autoInterval = null;
+        btn.innerText = '▶️ เปิดหยดอัตโนมัติ';
+      } else {
+        autoInterval = setInterval(() => {
+          if (currentV2 >= 40) toggleAutoDrop();
+          addBase(0.1);
+        }, 100);
+        btn.innerText = '⏸️ หยุดหยดอัตโนมัติ';
+      }
+    }
+
+    function resetLab() {
+      if (autoInterval) toggleAutoDrop();
+      initProblem();
+      document.getElementById('volDisplay').innerText = '0.00 mL';
+      document.getElementById('phDisplay').innerText = calculatepH(0).toFixed(2);
+      document.getElementById('resultBox').style.display = 'none';
+      document.getElementById('userAns').value = '';
     }
 
     function checkAnswer() {
-        let userAns = parseFloat(document.getElementById('user-answer').value);
-        let resultMsg = document.getElementById('result-message');
+      const userAns = parseFloat(document.getElementById('userAns').value);
+      const resBox = document.getElementById('resultBox');
+      resBox.style.display = 'block';
 
-        if (isNaN(userAns)) {
-            resultMsg.innerText = "กรุณากรอกตัวเลขคำตอบ";
-            resultMsg.style.color = "orange";
-            return;
-        }
+      if (isNaN(userAns)) {
+        resBox.style.background = 'rgba(234, 179, 8, 0.2)';
+        resBox.style.color = '#fde047';
+        resBox.innerText = '⚠️ กรุณากรอกตัวเลขคำตอบก่อนส่งประเมิน';
+        return;
+      }
 
-        // ยอมรับความคลาดเคลื่อนได้ ±0.01
-        if (Math.abs(userAns - targetM1) <= 0.01) {
-            resultMsg.innerText = "🎉 ถูกต้อง! คุณคำนวณความเข้มข้นกรดได้แม่นยำมาก";
-            resultMsg.style.color = "green";
-            isFinished = true;
-        } else {
-            resultMsg.innerText = "❌ คำตอบยังไม่ถูกต้อง ลองคำนวณใหม่อีกครั้ง";
-            resultMsg.style.color = "red";
-        }
+      if (Math.abs(userAns - targetM1) <= 0.005) {
+        resBox.style.background = 'rgba(34, 197, 94, 0.2)';
+        resBox.style.color = '#4ade80';
+        resBox.innerText = `🎉 ถูกต้องแม่นยำ! ความเข้มข้น HCl คือ ${targetM1.toFixed(3)} M`;
+        confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+      } else {
+        resBox.style.background = 'rgba(239, 68, 68, 0.2)';
+        resBox.style.color = '#fca5a5';
+        resBox.innerText = `❌ ยังไม่ถูกต้อง (คำตอบที่ถูกต้องคือประมาณ ${targetM1.toFixed(3)} M) ลองคำนวณใหม่อีกครั้งครับ`;
+      }
     }
-</script>
 
+    initProblem();
+    drawLab();
+  </script>
 </body>
 </html>
