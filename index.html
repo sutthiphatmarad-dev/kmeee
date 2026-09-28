@@ -239,17 +239,14 @@
       </div>
 
       <div class="quiz-section">
-        <h3 style="font-size: 1rem; margin-bottom: 0.5rem; color: var(--accent-primary);">📝 คำนวณหาความเข้มข้นของกรด HCl (M1)</h3>
-        <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.6;" id="problemText">
-          <b>ข้อมูลชุดทดลอง:</b><br>
-          • ใช้กรด HCl (V1) ปริมาตร <b id="v1Display">25.00 mL</b><br>
-          • ไทเทรตด้วย NaOH ความเข้มข้น (M2) <b id="m2Display">0.10 M</b><br>
-          • สังเกตการเปลี่ยนสีของ <b>ฟีนอล์ฟทาลีน</b> (สีชมพูอ่อนระเรื่อ) เพื่อหาจุดยุติ (V2)
+        <h3 style="font-size: 1rem; margin-bottom: 0.5rem; color: var(--accent-primary);" id="questionTitle">📝 คำนวณหาความเข้มข้นของกรด HCl (M1)</h3>
+        <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.6;" id="problemDetails">
+          <!-- เนื้อหาโจทย์อัปเดตอัตโนมัติผ่าน JS -->
         </p>
 
         <div style="margin-top: 1rem;">
-          <label style="font-size: 0.85rem;">กรอกค่าความเข้มข้น M1 ที่คำนวณได้ (M):</label>
-          <input type="number" id="userAns" placeholder="เช่น 0.08" step="0.001">
+          <label style="font-size: 0.85rem;" id="inputLabel">กรอกค่าคำตอบที่คำนวณได้:</label>
+          <input type="number" id="userAns" placeholder="กรอกตัวเลขคำตอบ" step="0.001">
           <button class="btn btn-primary" onclick="checkAnswer()" style="width: 100%; margin-top: 0.75rem;">ส่งคำตอบประเมินผล</button>
         </div>
 
@@ -259,13 +256,17 @@
   </div>
 
   <script>
-    // สเปกโจทย์ตัวแปรแบบไดนามิก
+    // ตัวแปรเคมี
     let V1 = 25.0; 
+    let M1 = 0.08;
     let M2 = 0.10; 
-    let targetM1 = 0.08;
     let exactV2 = 20.0;
     let currentV2 = 0;
     let autoInterval = null;
+
+    // ระบบจัดการประเภทคำถาม
+    let targetVariable = 'M1'; // M1, M2, V1, V2
+    let correctAnswer = 0;
 
     // Canvas Logic
     const canvas = document.getElementById('labCanvas');
@@ -280,25 +281,25 @@
     window.addEventListener('resize', resizeCanvas);
     resizeCanvas();
 
-    // ฟังก์ชันสุ่มโจทย์ใหม่และอัปเดตตัวเลขบนหน้าจอ
+    // ฟังก์ชันสุ่มโจทย์และสุ่มตัวแปรเป้าหมาย
     function initProblem() {
       const v1Options = [10.0, 15.0, 20.0, 25.0, 30.0, 50.0];
       const m2Options = [0.05, 0.10, 0.15, 0.20];
       
       V1 = v1Options[Math.floor(Math.random() * v1Options.length)];
       M2 = m2Options[Math.floor(Math.random() * m2Options.length)];
-      
-      // สุ่มค่า M1 ที่เป็นคำตอบ (ช่วง 0.03 ถึง 0.25 M)
-      targetM1 = Math.round((Math.random() * 0.22 + 0.03) * 1000) / 1000;
-      exactV2 = (targetM1 * V1) / M2;
+      M1 = Math.round((Math.random() * 0.20 + 0.04) * 1000) / 1000;
+      exactV2 = (M1 * V1) / M2;
       
       currentV2 = 0;
       drops = [];
       bubbles = [];
 
-      // อัปเดตตัวเลขโจทย์บน UI
-      document.getElementById('v1Display').innerText = V1.toFixed(2) + ' mL';
-      document.getElementById('m2Display').innerText = M2.toFixed(2) + ' M';
+      // สุ่มตัวแปรที่ต้องการให้ผู้เรียนหา
+      const varTypes = ['M1', 'M2', 'V1', 'V2'];
+      targetVariable = varTypes[Math.floor(Math.random() * varTypes.length)];
+
+      updateUIForProblem();
 
       if (titrationChart) {
         chartData.labels = [0];
@@ -307,8 +308,57 @@
       }
     }
 
+    function updateUIForProblem() {
+      const titleEl = document.getElementById('questionTitle');
+      const detailsEl = document.getElementById('problemDetails');
+      const labelEl = document.getElementById('inputLabel');
+
+      if (targetVariable === 'M1') {
+        correctAnswer = M1;
+        titleEl.innerText = '📝 คำนวณหาความเข้มข้นของกรด HCl (M1)';
+        labelEl.innerText = 'กรอกค่าความเข้มข้น M1 ที่คำนวณได้ (โมลาร์, M):';
+        detailsEl.innerHTML = `
+          <b>ข้อมูลชุดทดลอง:</b><br>
+          • ปริมาตรกรด HCl (V1) = <b>${V1.toFixed(2)} mL</b><br>
+          • ความเข้มข้นเบส NaOH (M2) = <b>${M2.toFixed(2)} M</b><br>
+          • ปริมาตรเบสที่จุดยุติ (V2) = <i>ทดลองไทเทรตในแล็บเพื่อหาค่า V2</i>
+        `;
+      } else if (targetVariable === 'M2') {
+        correctAnswer = M2;
+        titleEl.innerText = '📝 คำนวณหาความเข้มข้นของเบส NaOH (M2)';
+        labelEl.innerText = 'กรอกค่าความเข้มข้น M2 ที่คำนวณได้ (โมลาร์, M):';
+        detailsEl.innerHTML = `
+          <b>ข้อมูลชุดทดลอง:</b><br>
+          • ปริมาตรกรด HCl (V1) = <b>${V1.toFixed(2)} mL</b><br>
+          • ความเข้มข้นกรด HCl (M1) = <b>${M1.toFixed(3)} M</b><br>
+          • ปริมาตรเบสที่จุดยุติ (V2) = <i>ทดลองไทเทรตในแล็บเพื่อหาค่า V2</i>
+        `;
+      } else if (targetVariable === 'V1') {
+        correctAnswer = V1;
+        titleEl.innerText = '📝 คำนวณหาปริมาตรตั้งต้นของกรด HCl (V1)';
+        labelEl.innerText = 'กรอกค่าปริมาตรกรด V1 ที่คำนวณได้ (mL):';
+        detailsEl.innerHTML = `
+          <b>ข้อมูลชุดทดลอง:</b><br>
+          • ความเข้มข้นกรด HCl (M1) = <b>${M1.toFixed(3)} M</b><br>
+          • ความเข้มข้นเบส NaOH (M2) = <b>${M2.toFixed(2)} M</b><br>
+          • ปริมาตรเบสที่จุดยุติ (V2) = <i>ทดลองไทเทรตในแล็บเพื่อหาค่า V2</i>
+        `;
+      } else if (targetVariable === 'V2') {
+        correctAnswer = exactV2;
+        titleEl.innerText = '📝 คำนวณหาปริมาตรเบส NaOH ณ จุดยุติ (V2)';
+        labelEl.innerText = 'กรอกค่าปริมาตรเบส V2 ณ จุดยุติที่คำนวณได้ (mL):';
+        detailsEl.innerHTML = `
+          <b>ข้อมูลชุดทดลอง:</b><br>
+          • ปริมาตรกรด HCl (V1) = <b>${V1.toFixed(2)} mL</b><br>
+          • ความเข้มข้นกรด HCl (M1) = <b>${M1.toFixed(3)} M</b><br>
+          • ความเข้มข้นเบส NaOH (M2) = <b>${M2.toFixed(2)} M</b><br>
+          <i>(คำนวณตามทฤษฎีจาก M1·V1 = M2·V2 หรือสังเกตจากการไทเทรต)</i>
+        `;
+      }
+    }
+
     function calculatepH(v2) {
-      const molesAcid = (V1 / 1000) * targetM1;
+      const molesAcid = (V1 / 1000) * M1;
       const molesBase = (v2 / 1000) * M2;
       const totalVol = (V1 + v2) / 1000;
 
@@ -546,15 +596,19 @@
         return;
       }
 
-      if (Math.abs(userAns - targetM1) <= 0.005) {
+      // ยอมรับความคลาดเคลื่อนได้เล็กน้อย (0.01 หรือ 0.5 ตามประเภทตัวแปร)
+      const tolerance = (targetVariable === 'V1' || targetVariable === 'V2') ? 0.3 : 0.005;
+      const unitStr = (targetVariable === 'V1' || targetVariable === 'V2') ? 'mL' : 'M';
+
+      if (Math.abs(userAns - correctAnswer) <= tolerance) {
         resBox.style.background = 'rgba(34, 197, 94, 0.2)';
         resBox.style.color = '#4ade80';
-        resBox.innerText = `🎉 ถูกต้องแม่นยำ! ความเข้มข้น HCl คือ ${targetM1.toFixed(3)} M`;
+        resBox.innerText = `🎉 ถูกต้องแม่นยำ! คำตอบของ ${targetVariable} คือ ${correctAnswer.toFixed(3)} ${unitStr}`;
         confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
       } else {
         resBox.style.background = 'rgba(239, 68, 68, 0.2)';
         resBox.style.color = '#fca5a5';
-        resBox.innerText = `❌ ยังไม่ถูกต้อง (คำตอบที่ถูกต้องคือประมาณ ${targetM1.toFixed(3)} M) ลองคำนวณใหม่อีกครั้งครับ`;
+        resBox.innerText = `❌ ยังไม่ถูกต้อง (คำตอบที่ถูกต้องคือประมาณ ${correctAnswer.toFixed(3)} ${unitStr}) ลองคำนวณใหม่อีกครั้งครับ`;
       }
     }
 
