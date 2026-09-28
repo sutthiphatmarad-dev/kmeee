@@ -240,10 +240,10 @@
 
       <div class="quiz-section">
         <h3 style="font-size: 1rem; margin-bottom: 0.5rem; color: var(--accent-primary);">📝 คำนวณหาความเข้มข้นของกรด HCl (M1)</h3>
-        <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.6;">
+        <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.6;" id="problemText">
           <b>ข้อมูลชุดทดลอง:</b><br>
-          • ใช้กรด HCl (V1) ปริมาตร <b>25.00 mL</b><br>
-          • ไทเทรตด้วย NaOH ความเข้มข้น (M2) <b>0.10 M</b><br>
+          • ใช้กรด HCl (V1) ปริมาตร <b id="v1Display">25.00 mL</b><br>
+          • ไทเทรตด้วย NaOH ความเข้มข้น (M2) <b id="m2Display">0.10 M</b><br>
           • สังเกตการเปลี่ยนสีของ <b>ฟีนอล์ฟทาลีน</b> (สีชมพูอ่อนระเรื่อ) เพื่อหาจุดยุติ (V2)
         </p>
 
@@ -259,9 +259,9 @@
   </div>
 
   <script>
-    // สเปกโจทย์
-    const V1 = 25.0; 
-    const M2 = 0.10; 
+    // สเปกโจทย์ตัวแปรแบบไดนามิก
+    let V1 = 25.0; 
+    let M2 = 0.10; 
     let targetM1 = 0.08;
     let exactV2 = 20.0;
     let currentV2 = 0;
@@ -280,15 +280,31 @@
     window.addEventListener('resize', resizeCanvas);
     resizeCanvas();
 
+    // ฟังก์ชันสุ่มโจทย์ใหม่และอัปเดตตัวเลขบนหน้าจอ
     function initProblem() {
-      targetM1 = (Math.floor(Math.random() * 8) + 5) / 100;
+      const v1Options = [10.0, 15.0, 20.0, 25.0, 30.0, 50.0];
+      const m2Options = [0.05, 0.10, 0.15, 0.20];
+      
+      V1 = v1Options[Math.floor(Math.random() * v1Options.length)];
+      M2 = m2Options[Math.floor(Math.random() * m2Options.length)];
+      
+      // สุ่มค่า M1 ที่เป็นคำตอบ (ช่วง 0.03 ถึง 0.25 M)
+      targetM1 = Math.round((Math.random() * 0.22 + 0.03) * 1000) / 1000;
       exactV2 = (targetM1 * V1) / M2;
+      
       currentV2 = 0;
       drops = [];
       bubbles = [];
-      chartData.labels = [0];
-      chartData.datasets[0].data = [calculatepH(0)];
-      if (titrationChart) titrationChart.update();
+
+      // อัปเดตตัวเลขโจทย์บน UI
+      document.getElementById('v1Display').innerText = V1.toFixed(2) + ' mL';
+      document.getElementById('m2Display').innerText = M2.toFixed(2) + ' M';
+
+      if (titrationChart) {
+        chartData.labels = [0];
+        chartData.datasets[0].data = [calculatepH(0)];
+        titrationChart.update();
+      }
     }
 
     function calculatepH(v2) {
@@ -353,7 +369,7 @@
       ctx.strokeRect(cx - 10, 20, 20, 170);
 
       // สารละลายในบิวเรตต์
-      const baseHeight = Math.max(0, 150 - (currentV2 / 40) * 150);
+      const baseHeight = Math.max(0, 150 - (currentV2 / 50) * 150);
       let liquidGrad = ctx.createLinearGradient(cx - 8, 0, cx + 8, 0);
       liquidGrad.addColorStop(0, 'rgba(0, 210, 255, 0.7)');
       liquidGrad.addColorStop(1, 'rgba(0, 114, 255, 0.5)');
@@ -384,11 +400,11 @@
         }
       }
 
-      // วาดสารละลายในขวดรูปชมพู่ (มีสารตั้งต้นทันที)
+      // วาดสารละลายในขวดรูปชมพู่
       const ph = calculatepH(currentV2);
       const colorObj = getColorForpH(ph);
-      const totalVolume = V1 + currentV2; // เพิ่มระดับตามปริมาตรสาร
-      const liquidTopY = Math.max(260, 315 - (totalVolume / 65) * 60);
+      const totalVolume = V1 + currentV2;
+      const liquidTopY = Math.max(260, 315 - (totalVolume / 80) * 60);
 
       ctx.save();
       ctx.beginPath();
@@ -408,13 +424,13 @@
       ctx.fill();
       ctx.shadowBlur = 0;
 
-      // วาดเส้นขอบผิวหน้าของเหลว
+      // ขอบผิวน้ำ
       ctx.beginPath();
       ctx.ellipse(cx, liquidTopY, liquidHalfWidth, 4, 0, 0, Math.PI * 2);
       ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
       ctx.fill();
 
-      // โครงแก้วขวดรูปชมพู่ (Glass Flask)
+      // โครงขวดแก้ว
       ctx.beginPath();
       ctx.moveTo(cx - 12, 230);
       ctx.lineTo(cx + 12, 230);
@@ -491,7 +507,7 @@
         btn.innerText = '▶️ เปิดหยดอัตโนมัติ';
       } else {
         autoInterval = setInterval(() => {
-          if (currentV2 >= 40) toggleAutoDrop();
+          if (currentV2 >= 50) toggleAutoDrop();
           addBase(0.1);
         }, 120);
         btn.innerText = '⏸️ หยุดหยดอัตโนมัติ';
@@ -542,6 +558,7 @@
       }
     }
 
+    // เริ่มต้นทำงาน
     initProblem();
     drawLab();
   </script>
