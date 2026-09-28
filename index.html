@@ -126,6 +126,11 @@
       border: none;
     }
 
+    .btn-purple {
+      background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+      border: none;
+    }
+
     .stat-card {
       background: rgba(15, 23, 42, 0.5);
       border-radius: 0.75rem;
@@ -186,8 +191,8 @@
     <!-- ซีกซ้าย: ห้องแล็บจำลอง -->
     <div class="panel">
       <div style="display: flex; justify-content: space-between; align-items: center;">
-        <h2 style="font-size: 1.1rem; font-weight: 600;">🥼 ห้องปฏิบัติต่างๆ (Lab Workbench)</h2>
-        <button class="btn" onclick="resetLab()" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">🔄 รีเซ็ตการทดลอง</button>
+        <h2 style="font-size: 1.1rem; font-weight: 600;">🥼 โต๊ะการทดลอง (Lab Workbench)</h2>
+        <button class="btn" onclick="resetLab()" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">🔄 รีเซ็ตการทดลองนี้</button>
       </div>
 
       <div class="canvas-container">
@@ -203,7 +208,7 @@
 
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
         <div class="stat-card">
-          <div style="font-size: 0.85rem; color: var(--text-muted);">ปริมาตร NaOH ($V_2$)</div>
+          <div style="font-size: 0.85rem; color: var(--text-muted);">ปริมาตร NaOH (V2)</div>
           <div style="font-size: 1.5rem; font-weight: 600; text-align: center; margin-top: 0.25rem;" id="volDisplay">0.00 mL</div>
         </div>
         <div class="stat-card">
@@ -215,23 +220,26 @@
 
     <!-- ซีกขวา: กราฟ + ระบบตอบคำถาม -->
     <div class="panel">
-      <h2 style="font-size: 1.1rem; font-weight: 600;">📊 กราฟการไทเทรต & วิเคราะห์ผล</h2>
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h2 style="font-size: 1.1rem; font-weight: 600;">📊 กราฟการไทเทรต & วิเคราะห์ผล</h2>
+        <button class="btn btn-purple" onclick="randomNewProblem()" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">🔀 สุ่มโจทย์ใหม่</button>
+      </div>
       
       <div class="chart-box">
         <canvas id="titrationChart"></canvas>
       </div>
 
       <div class="quiz-section">
-        <h3 style="font-size: 1rem; margin-bottom: 0.5rem; color: var(--accent-primary);">📝 คำนวณหาความเข้มข้นของกรด HCl ($M_1$)</h3>
-        <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.5;">
+        <h3 style="font-size: 1rem; margin-bottom: 0.5rem; color: var(--accent-primary);">📝 คำนวณหาความเข้มข้นของกรด HCl (M1)</h3>
+        <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.6;">
           <b>ข้อมูลชุดทดลอง:</b><br>
-          • ใช้กรด HCl ($V_1$) ปริมาตร <b>25.00 mL</b><br>
-          • ไทเทรตด้วย NaOH ความเข้มข้น ($M_2$) <b>0.10 M</b><br>
-          • สังเกตการเปลี่ยนสีของ <b>ฟีนอล์ฟทาลีน</b> (สีชมพูอ่อนระเรื่อ) เพื่อหาจุดยุติ ($V_2$)
+          • ใช้กรด HCl (V1) ปริมาตร <b>25.00 mL</b><br>
+          • ไทเทรตด้วย NaOH ความเข้มข้น (M2) <b>0.10 M</b><br>
+          • สังเกตการเปลี่ยนสีของ <b>ฟีนอล์ฟทาลีน</b> (สีชมพูอ่อนระเรื่อ) เพื่อหาจุดยุติ (V2)
         </p>
 
         <div style="margin-top: 1rem;">
-          <label style="font-size: 0.85rem;">กรอกค่าความเข้มข้น $M_1$ ที่คำนวณได้ (M):</label>
+          <label style="font-size: 0.85rem;">กรอกค่าความเข้มข้น M1 ที่คำนวณได้ (M):</label>
           <input type="number" id="userAns" placeholder="เช่น 0.08" step="0.001">
           <button class="btn btn-primary" onclick="checkAnswer()" style="width: 100%; margin-top: 0.75rem;">ส่งคำตอบประเมินผล</button>
         </div>
@@ -262,7 +270,7 @@
     resizeCanvas();
 
     function initProblem() {
-      targetM1 = (Math.floor(Math.random() * 8) + 5) / 100; // 0.05 - 0.12 M
+      targetM1 = (Math.floor(Math.random() * 8) + 5) / 100; // สุ่ม 0.05 - 0.12 M
       exactV2 = (targetM1 * V1) / M2;
       currentV2 = 0;
       chartData.labels = [0];
@@ -390,11 +398,20 @@
 
     function resetLab() {
       if (autoInterval) toggleAutoDrop();
-      initProblem();
+      currentV2 = 0;
+      chartData.labels = [0];
+      chartData.datasets[0].data = [calculatepH(0)];
+      if (titrationChart) titrationChart.update();
+      
       document.getElementById('volDisplay').innerText = '0.00 mL';
       document.getElementById('phDisplay').innerText = calculatepH(0).toFixed(2);
       document.getElementById('resultBox').style.display = 'none';
       document.getElementById('userAns').value = '';
+    }
+
+    function randomNewProblem() {
+      resetLab();
+      initProblem();
     }
 
     function checkAnswer() {
