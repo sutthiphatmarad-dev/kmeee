@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Chemical Titration Simulator - ม.5 Pro Edition</title>
+  <title>Chemical Titration Simulator - ม.5 Pro HD</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -12,8 +12,8 @@
   <style>
     :root {
       --bg-main: #090d16;
-      --card-bg: rgba(18, 26, 43, 0.75);
-      --card-border: rgba(56, 189, 248, 0.18);
+      --card-bg: rgba(18, 26, 43, 0.8);
+      --card-border: rgba(56, 189, 248, 0.2);
       --accent-primary: #00d2ff;
       --accent-secondary: #ff2a5f;
       --text-light: #f8fafc;
@@ -107,7 +107,7 @@
       border-radius: 0.75rem;
       font-weight: 500;
       cursor: pointer;
-      transition: all 0.25 ease;
+      transition: all 0.25s ease;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -197,10 +197,10 @@
   </header>
 
   <div class="main-layout">
-    <!-- ซีกซ้าย: ห้องแล็บจำลอง -->
+    <!-- ซีกซ้าย: โต๊ะทดลอง -->
     <div class="panel">
       <div style="display: flex; justify-content: space-between; align-items: center;">
-        <h2 style="font-size: 1.1rem; font-weight: 600;">🥼 โต๊ะการทดลอง HD (Interactive Lab)</h2>
+        <h2 style="font-size: 1.1rem; font-weight: 600;">🥼 โต๊ะการทดลอง (Interactive Lab)</h2>
         <button class="btn" onclick="resetLab()" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">🔄 รีเซ็ตการทดลองนี้</button>
       </div>
 
@@ -227,7 +227,7 @@
       </div>
     </div>
 
-    <!-- ซีกขวา: กราฟ + ระบบตอบคำถาม -->
+    <!-- ซีกขวา: กราฟ + คำถาม -->
     <div class="panel">
       <div style="display: flex; justify-content: space-between; align-items: center;">
         <h2 style="font-size: 1.1rem; font-weight: 600;">📊 กราฟการไทเทรต & วิเคราะห์ผล</h2>
@@ -267,7 +267,7 @@
     let currentV2 = 0;
     let autoInterval = null;
 
-    // Canvas Logic (HD Graphics)
+    // Canvas Logic
     const canvas = document.getElementById('labCanvas');
     const ctx = canvas.getContext('2d');
     let drops = [];
@@ -311,36 +311,36 @@
     }
 
     function getColorForpH(ph) {
-      if (ph < 8.2) return { fill: 'rgba(230, 245, 255, 0.25)', glow: 'rgba(255,255,255,0.1)' };
+      if (ph < 8.2) return { fill: 'rgba(215, 238, 255, 0.45)', glow: 'rgba(56, 189, 248, 0.25)' };
       if (ph >= 8.2 && ph <= 10.0) {
         const alpha = (ph - 8.2) / 1.8;
         return { 
-          fill: `rgba(255, 70, 130, ${0.3 + alpha * 0.5})`,
-          glow: `rgba(255, 70, 130, ${0.4 + alpha * 0.4})`
+          fill: `rgba(255, 80, 140, ${0.45 + alpha * 0.4})`,
+          glow: `rgba(255, 80, 140, ${0.5 + alpha * 0.4})`
         };
       }
-      return { fill: 'rgba(255, 10, 80, 0.85)', glow: 'rgba(255, 10, 80, 0.7)' };
+      return { fill: 'rgba(240, 15, 90, 0.9)', glow: 'rgba(255, 15, 90, 0.8)' };
     }
 
     function drawLab() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       const cx = canvas.width / 2;
 
-      // ขาตั้งโลหะ (Metallic Stand)
+      // ขาตั้งโลหะ
       let standGrad = ctx.createLinearGradient(cx + 40, 0, cx + 50, 0);
       standGrad.addColorStop(0, '#334155');
       standGrad.addColorStop(0.5, '#94a3b8');
       standGrad.addColorStop(1, '#1e293b');
       
       ctx.fillStyle = standGrad;
-      ctx.fillRect(cx - 70, 350, 140, 12); // ฐาน
-      ctx.fillRect(cx + 45, 30, 8, 320);  // เสา
+      ctx.fillRect(cx - 70, 350, 140, 12);
+      ctx.fillRect(cx + 45, 30, 8, 320);
 
-      // แคลมป์จับ (Clamp)
+      // แคลมป์จับ
       ctx.fillStyle = '#64748b';
       ctx.fillRect(cx + 10, 110, 37, 8);
 
-      // บิวเรตต์ (Glass Burette)
+      // บิวเรตต์
       let buretteGrad = ctx.createLinearGradient(cx - 12, 0, cx + 12, 0);
       buretteGrad.addColorStop(0, 'rgba(255,255,255,0.5)');
       buretteGrad.addColorStop(0.3, 'rgba(255,255,255,0.1)');
@@ -352,7 +352,7 @@
       ctx.fillRect(cx - 10, 20, 20, 170);
       ctx.strokeRect(cx - 10, 20, 20, 170);
 
-      // สารละลายในบิวเรตต์ (Liquid in Burette)
+      // สารละลายในบิวเรตต์
       const baseHeight = Math.max(0, 150 - (currentV2 / 40) * 150);
       let liquidGrad = ctx.createLinearGradient(cx - 8, 0, cx + 8, 0);
       liquidGrad.addColorStop(0, 'rgba(0, 210, 255, 0.7)');
@@ -360,11 +360,11 @@
       ctx.fillStyle = liquidGrad;
       ctx.fillRect(cx - 8, 20 + (150 - baseHeight), 16, baseHeight);
 
-      // หัวก๊อกบิวเรตต์ (Stopcock)
+      // หัวก๊อกบิวเรตต์
       ctx.fillStyle = '#f43f5e';
       ctx.fillRect(cx - 14, 190, 28, 6);
 
-      // หยดสาร (Droplets Animation)
+      // หยดสาร
       for (let i = drops.length - 1; i >= 0; i--) {
         let d = drops[i];
         ctx.beginPath();
@@ -376,40 +376,57 @@
         ctx.shadowBlur = 0;
         d.y += 6;
 
-        if (d.y >= 265) {
+        if (d.y >= 285) {
           drops.splice(i, 1);
-          // สร้างฟองอากาศเมื่อหยดลงน้ำ
           if (bubbles.length < 15) {
-            bubbles.push({ x: cx + (Math.random() * 30 - 15), y: 310, r: Math.random() * 3 + 1, alpha: 1 });
+            bubbles.push({ x: cx + (Math.random() * 30 - 15), y: 320, r: Math.random() * 3 + 1, alpha: 1 });
           }
         }
       }
 
-      // ขวดรูปชมพู่ 3D Glass Flask
+      // วาดสารละลายในขวดรูปชมพู่ (มีสารตั้งต้นทันที)
       const ph = calculatepH(currentV2);
       const colorObj = getColorForpH(ph);
+      const totalVolume = V1 + currentV2; // เพิ่มระดับตามปริมาตรสาร
+      const liquidTopY = Math.max(260, 315 - (totalVolume / 65) * 60);
 
       ctx.save();
+      ctx.beginPath();
+      
+      const widthRatioAtTop = (330 - liquidTopY) / 100;
+      const liquidHalfWidth = 12 + widthRatioAtTop * 43;
+
+      ctx.moveTo(cx - liquidHalfWidth, liquidTopY);
+      ctx.lineTo(cx + liquidHalfWidth, liquidTopY);
+      ctx.lineTo(cx + 55, 330);
+      ctx.quadraticCurveTo(cx, 340, cx - 55, 330);
+      ctx.closePath();
+
+      ctx.fillStyle = colorObj.fill;
+      ctx.shadowColor = colorObj.glow;
+      ctx.shadowBlur = 18;
+      ctx.fill();
+      ctx.shadowBlur = 0;
+
+      // วาดเส้นขอบผิวหน้าของเหลว
+      ctx.beginPath();
+      ctx.ellipse(cx, liquidTopY, liquidHalfWidth, 4, 0, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
+      ctx.fill();
+
+      // โครงแก้วขวดรูปชมพู่ (Glass Flask)
       ctx.beginPath();
       ctx.moveTo(cx - 12, 230);
       ctx.lineTo(cx + 12, 230);
       ctx.lineTo(cx + 55, 330);
       ctx.quadraticCurveTo(cx, 340, cx - 55, 330);
       ctx.closePath();
-
-      // สารละลายในขวด + แสงสะท้อน
-      ctx.fillStyle = colorObj.fill;
-      ctx.shadowColor = colorObj.glow;
-      ctx.shadowBlur = 20;
-      ctx.fill();
-      ctx.shadowBlur = 0;
-
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.75)';
       ctx.lineWidth = 2;
       ctx.stroke();
       ctx.restore();
 
-      // วาดฟองอากาศ (Bubbles Animation)
+      // ฟองอากาศ
       for (let i = bubbles.length - 1; i >= 0; i--) {
         let b = bubbles[i];
         ctx.beginPath();
